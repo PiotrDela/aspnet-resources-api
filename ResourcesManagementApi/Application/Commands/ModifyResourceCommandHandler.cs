@@ -12,18 +12,16 @@ namespace ResourcesManagementApi.Application.Commands
             this.resourceRepository = resourceRepository ?? throw new ArgumentNullException(nameof(resourceRepository));
         }
 
-        public Task Handle(ModifyResourceCommand request, CancellationToken cancellationToken)
+        public async Task Handle(ModifyResourceCommand request, CancellationToken cancellationToken)
         {
-            var resource = this.resourceRepository.Get(request.ResourceId);
+            var resource = await this.resourceRepository.GetAsync(request.ResourceId);
             if (resource == null)
             {
                 throw new Domain.Exceptions.EntityNotFoundException($"Could not find resource with id: {request.ResourceId}");
             }
 
             request.ModifyAction(resource);
-            this.resourceRepository.Update(resource);
-
-            return Task.CompletedTask;
+            await this.resourceRepository.UpdateAsync(resource);
         }
     }
 }

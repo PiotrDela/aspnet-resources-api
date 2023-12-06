@@ -4,13 +4,9 @@ namespace ResourcesManagementApi.Domain.Repositories
 {
     public interface IResourceRepository
     {
-        void Add(Resource resource);
-        Resource Get(int id);
+        Task<int> AddAsync(Resource resource);
+        Task<Resource> GetAsync(int id);
 
-        void Update(Resource resource);
-    }
-
-    public class ResourceRepository
-    {
+        Task UpdateAsync(Resource resource);
     }
 }

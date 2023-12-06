@@ -12,13 +12,11 @@ namespace ResourcesManagementApi.Application.Commands
             this.resourceRepository = resourceRepository ?? throw new ArgumentNullException(nameof(resourceRepository));
         }
 
-        public Task<int> Handle(CreateResourceCommand request, CancellationToken cancellationToken)
+        public async Task<int> Handle(CreateResourceCommand request, CancellationToken cancellationToken)
         {
             var resource = new Domain.Entities.Resource();
 
-            this.resourceRepository.Add(resource);
-
-            return Task.FromResult(resource.Id);
+            return await this.resourceRepository.AddAsync(resource);
         }
     }
 }
