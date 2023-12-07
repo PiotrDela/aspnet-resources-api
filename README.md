@@ -1,4 +1,4 @@
-Solution contains implementation of API and persistence layer.
+Solution contains implementation of API and persistence layer using .NET 6.
 
 Few assumptions:
 - Used Dapper as a simple ORM
