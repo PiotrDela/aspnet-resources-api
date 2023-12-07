@@ -8,6 +8,7 @@ Few assumptions:
 - ResourcesManagement.http file contains HTTP requests defined as code so it's easier to build and send requests (I'm using VS Code Rest Client extension for that purpose)
 
 Suggested further improvements:
+- Connection string to DB should be securely stored outside of repository, same with the JWT signing key, however I left it directly in the source code just for the simplicity
 - When storing passwords, keep it as hash(plain text + salt). Salt should be unique value for every User entry to increase security
 - Write unit tests for the Command Handlers
 - Write integration tests for ResourcesController, one that will initialize and run the host "in memory"
