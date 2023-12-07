@@ -1,26 +1,27 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ResourcesManagementApi.ApiModel;
 using ResourcesManagementApi.Application.Commands;
-using System.ComponentModel.DataAnnotations;
 
 namespace ResourcesManagementApi.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("api/[controller]")]
 public class ResourcesController : ControllerBase
 {
     private readonly ISender sender;
     private readonly IHttpContextAccessor httpContextAccessor;
+    private readonly IConfiguration configuration;
 
-    public ResourcesController(ISender sender, IHttpContextAccessor httpContextAccessor)
+    public ResourcesController(ISender sender, IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
     {
         this.sender = sender ?? throw new ArgumentNullException(nameof(sender));
         this.httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+        this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     }
 
-    //[Authorize(Roles = "Admin")]
-    [Route("/")]
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> CreateResource()
     {
@@ -34,33 +35,23 @@ public class ResourcesController : ControllerBase
 
     // just to be able to return 201 in case above
     [Authorize]
-    [Route("/{id}")]
-    [HttpGet(Name = "GetResourceRoute")]
+    [HttpGet("{id}", Name = "GetResourceRoute")]
     public IActionResult GetResource()
     {
         throw new NotImplementedException();
     }
 
-    //[Authorize(Roles = "Admin")]
-    [Route("/{id}/withdrawn")]
-    [HttpPatch]
+    [Authorize(Roles = "Admin")]
+    [HttpPatch("{id}/withdrawn")]
     public async Task<IActionResult> WithdrawnResource([FromRoute]int id)
     {
-        try
-        {
-            await this.sender.Send(new ModifyResourceCommand(id, (resource) => { resource.Withdrawn(); }));
-        }
-        catch (Domain.Exceptions.EntityNotFoundException ex)
-        {
-            return NotFound(ex.Message);
-        }
+        await this.sender.Send(new WithdrawnResourceCommand(id));
 
         return Ok();
     }
 
-    //[Authorize]
-    [Route("/{id}/lock")]
-    [HttpPatch]
+    [Authorize]
+    [HttpPatch("{id}/lock")]
     public async Task<IActionResult> LockResource([FromRoute]int id, [FromBody] LockResourceRequest request)
     {
         if (ModelState.IsValid == false)
@@ -68,33 +59,33 @@ public class ResourcesController : ControllerBase
             return BadRequest();
         }
 
-        var lockPeriod = request.LockKind == ResourceLockKind.Temporary ? TimeSpan.FromDays(1) : TimeSpan.MaxValue; // TODO: fetch temporary period from config
-        var user = new Domain.Entities.User() { Id = 1 }; // TODO: fetch it from http context using httpcontext accessort
-        try
-        {
-            await this.sender.Send(new ModifyResourceCommand(id, (resource) => { resource.LockBy(user, lockPeriod); }));
-        }
-        catch (Domain.Exceptions.EntityNotFoundException ex)
-        {
-            return NotFound(ex.Message);
-        }
-        catch (Domain.Exceptions.BusinessRuleValidationException ex)
+        var requestingUserId = httpContextAccessor.ParseUserId();
+        if (requestingUserId.HasValue == false)
         {
             return Forbid();
         }
 
+        var temporaryLockPeriodInHours = configuration.GetValue<int>("TemporaryLockPeriodInHours");
+
+        var lockPeriod = request.LockKind == ResourceLockKind.Temporary ? TimeSpan.FromHours(temporaryLockPeriodInHours) : TimeSpan.MaxValue;
+
+        await this.sender.Send(new LockResourceCommand(id, requestingUserId.Value, lockPeriod));
+
         return Ok();
     }
 
-    public enum ResourceLockKind
+    [Authorize]
+    [HttpPatch("{id}/unlock")]
+    public async Task<IActionResult> UnlockResource([FromRoute] int id)
     {
-        Temporary = 0,
-        Permanent = 1,
-    }
+        var requestingUserId = httpContextAccessor.ParseUserId();
+        if (requestingUserId.HasValue == false)
+        {
+            return Forbid();
+        }
 
-    public class LockResourceRequest
-    {
-        [Required]
-        public ResourceLockKind? LockKind { get; set; }
+        await this.sender.Send(new UnlockResourceCommand(id, requestingUserId.Value));
+
+        return Ok();
     }
 }

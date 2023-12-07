@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ResourcesManagementApi.Authentication;
-using ResourcesManagementApi.Domain.Entities;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -11,10 +10,17 @@ namespace ResourcesManagementApi.Controllers;
 [Route("[controller]")]
 public partial class AuthenticationController : ControllerBase
 {
+    private readonly IAuthenticationProvider authenticationProvider;
+
+    public AuthenticationController(IAuthenticationProvider authenticationProvider)
+    {
+        this.authenticationProvider = authenticationProvider ?? throw new ArgumentNullException(nameof(authenticationProvider));
+    }
+
     [AllowAnonymous]
     [HttpPost]
     [Route("token")]
-    public IActionResult Authenticate(UserAuthenticationRequest loginUser)
+    public async Task<IActionResult> Authenticate(UserAuthenticationRequest request)
     {
 
         if (ModelState.IsValid == false)
@@ -22,26 +28,27 @@ public partial class AuthenticationController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var user = new User();
-        user.Name = "John";
-        user.IsAdmin = true;
+        var authenticatedUser = await authenticationProvider.AuthenticateAsync(request.Username, request.Password);
+        if (authenticatedUser == null)
+        {
+            return Unauthorized();
+        }
 
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, user.Name),
-            new Claim("Id", user.Id.ToString())
+            new Claim(ClaimTypes.NameIdentifier, authenticatedUser.Id.ToString()),
+            new Claim(ClaimTypes.Name, authenticatedUser.Name),
+            new Claim("UserId", authenticatedUser.Id.ToString())
         };
 
-        if (user.IsAdmin)
+        if (authenticatedUser.IsAdmin)
         {
-            claims.Add(new Claim("Role", "Admin"));
+            claims.Add(new Claim(ClaimTypes.Role, "Admin"));
         }
 
-        // create a new token with token helper and add our claim
-        // from `Westwind.AspNetCore`  NuGet Package
-        var token = JwtHelper.GetJwtToken(
-            loginUser.Username,
-            "00VVxkE6lvrgSP4gZykwocNua4reiymQ/KtPRLGBZRn/FOwyg/WZeisj/YruV1Pd",
+        var token = JwtTokenFactory.GetJwtToken(
+            authenticatedUser.Name,
+            "ba9142eff388474c95811256682c2ea604a4902fa5c54e69a1d54d269f0ae3bd",
             "https://mysite.com",
             "https://mysite.com",
             TimeSpan.FromMinutes(60),

@@ -5,6 +5,7 @@ using System.Data;
 
 namespace ResourcesManagementApi.Infrastructure
 {
+
     public class ResourceRepository : IResourceRepository
     {
         private readonly DapperContext dapperContext;

@@ -1,7 +1,8 @@
 ﻿using MediatR;
+using ResourcesManagementApi.Application.Commands;
 using ResourcesManagementApi.Domain.Repositories;
 
-namespace ResourcesManagementApi.Application.Commands
+namespace ResourcesManagementApi.Application.CommandHandlers
 {
     public class CreateResourceCommandHandler : IRequestHandler<CreateResourceCommand, int>
     {
@@ -16,7 +17,7 @@ namespace ResourcesManagementApi.Application.Commands
         {
             var resource = new Domain.Entities.Resource();
 
-            return await this.resourceRepository.AddAsync(resource);
+            return await resourceRepository.AddAsync(resource);
         }
     }
 }

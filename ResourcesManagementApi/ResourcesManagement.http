@@ -1,31 +1,41 @@
-@ResourcesManagement_HostAddress = http://localhost:5215
-@AccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzYW1wbGUiLCJqdGkiOiJkMjcyY2M4Ny0wMjZkLTRhODMtYTkzOC1hODc5MDkzMDIyOGUiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiSm9obiIsIklkIjoiMCIsImV4cCI6MTcwMTkwNDcxNSwiaXNzIjoiaHR0cHM6Ly9teXNpdGUuY29tIiwiYXVkIjoiaHR0cHM6Ly9teXNpdGUuY29tIn0.ZX2fXqdrUqIgGCDgUBimN0nL6uFt2xWac4TkluRPJNs"
+@host = http://localhost:5215
 
-POST {{ResourcesManagement_HostAddress}}/authentication/token
+### login
+# @name login
+POST {{host}}/authentication/token
 Content-Type: application/json
 Accept: application/json
 
 {
-    "username": "sample",
-    "password": "Wed, 21 Oct 2015 18:27:50 GMT"
+    "username": "John",
+    "password": "secretpassword"
 }
-
 ###
 
-POST {{ResourcesManagement_HostAddress}}/
-Authorization: Bearer abc
+### create resource
+POST {{host}}/api/resources/
+Authorization: Bearer {{login.response.body.token}}
 Accept: application/json
 ###
 
-PATCH {{ResourcesManagement_HostAddress}}/4/withdrawn
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzYW1wbGUiLCJqdGkiOiI1ODgzYjcyZS00YWUxLTQ0YzEtODIzNy02MTk5NmI0MGYxZjIiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiSm9obiIsIklkIjoiMCIsImV4cCI6MTcwMTkwNDk2NSwiaXNzIjoiaHR0cHM6Ly9teXNpdGUuY29tIiwiYXVkIjoiaHR0cHM6Ly9teXNpdGUuY29tIn0.jckpCx3zCPr78doO0CtN0Ahj_eB_5eAdqAqsoq12QpY
+### withdrawn resource
+PATCH {{host}}/api/resources/11/withdrawn
+Authorization: Bearer {{login.response.body.token}}
 Accept: application/json
 ###
 
-PATCH {{ResourcesManagement_HostAddress}}/1/lock
+### lock resource
+PATCH {{host}}/api/resources/222/lock
+Authorization: Bearer {{login.response.body.token}}
 Accept: application/json
 Content-Type: application/json
 
 {
-    "lockkind": 0
+    "lockkind": 3
 }
+
+### unlock resource
+PATCH {{host}}/api/resources/2/unlock
+Authorization: Bearer {{login.response.body.token}}
+Accept: application/json
+Content-Type: application/json

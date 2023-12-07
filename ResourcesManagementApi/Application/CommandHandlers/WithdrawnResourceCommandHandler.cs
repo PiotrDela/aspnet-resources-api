@@ -3,16 +3,16 @@ using ResourcesManagementApi.Domain.Repositories;
 
 namespace ResourcesManagementApi.Application.Commands
 {
-    public class ModifyResourceCommandHandler : IRequestHandler<ModifyResourceCommand>
+    public class WithdrawnResourceCommandHandler : IRequestHandler<WithdrawnResourceCommand>
     {
         private readonly IResourceRepository resourceRepository;
 
-        public ModifyResourceCommandHandler(IResourceRepository resourceRepository)
+        public WithdrawnResourceCommandHandler(IResourceRepository resourceRepository)
         {
             this.resourceRepository = resourceRepository ?? throw new ArgumentNullException(nameof(resourceRepository));
         }
 
-        public async Task Handle(ModifyResourceCommand request, CancellationToken cancellationToken)
+        public async Task Handle(WithdrawnResourceCommand request, CancellationToken cancellationToken)
         {
             var resource = await this.resourceRepository.GetAsync(request.ResourceId);
             if (resource == null)
@@ -20,8 +20,8 @@ namespace ResourcesManagementApi.Application.Commands
                 throw new Domain.Exceptions.EntityNotFoundException($"Could not find resource with id: {request.ResourceId}");
             }
 
-            request.ModifyAction(resource);
-            await this.resourceRepository.UpdateAsync(resource);
+            resource.Withdrawn();
+            await this.resourceRepository.UpdateAsync(resource); // TODO: passing cancellation token would nice as well
         }
     }
 }

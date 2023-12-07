@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using ResourcesManagementApi;
+using ResourcesManagementApi.Authentication;
 using ResourcesManagementApi.Domain.Repositories;
 using ResourcesManagementApi.Infrastructure;
 using System.Text;
@@ -18,6 +20,8 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddSingleton<DapperContext>();
 builder.Services.AddScoped<IResourceRepository, ResourceRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IAuthenticationProvider, AuthenticationProvider>();
 
 // Configure Authentication
 builder.Services.AddAuthentication(auth =>
@@ -34,8 +38,8 @@ builder.Services.AddAuthentication(auth =>
         ValidIssuer = "https://mysite.com",
         ValidateAudience = true,
         ValidAudience = "https://mysite.com",
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("00VVxkE6lvrgSP4gZykwocNua4reiymQ/KtPRLGBZRn/FOwyg/WZeisj/YruV1Pd"))
+        ValidateIssuerSigningKey = false,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("ba9142eff388474c95811256682c2ea604a4902fa5c54e69a1d54d269f0ae3bd"))
     };
 });
 
@@ -49,6 +53,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

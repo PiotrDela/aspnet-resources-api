@@ -13,13 +13,14 @@
                 throw new Exceptions.BusinessRuleValidationException("Unlock not allowed. Resource has been withdrawn already");
             }
 
-            if (LockedById.HasValue && LockedById.Value != user.Id)
+            var utcNow = DateTime.UtcNow;
+            if (LockedById.HasValue && LockedById.Value != user.Id && utcNow < this.LockExpirationTimeUtc)
             {
                 throw new Exceptions.BusinessRuleValidationException("Unlock not permitted");
             }
 
             this.LockedById = user.Id;
-            this.LockExpirationTimeUtc = DateTime.UtcNow.Add(lockPeriod);
+            this.LockExpirationTimeUtc = lockPeriod == TimeSpan.MaxValue ? DateTime.MaxValue : DateTime.UtcNow.Add(lockPeriod);
         }
 
         public void Withdrawn()

@@ -1,7 +1,7 @@
 ﻿namespace ResourcesManagementApi.Domain.Exceptions
 {
     [Serializable]
-	public class EntityNotFoundException : Exception
+	public class EntityNotFoundException : DomainException
 	{
 		public EntityNotFoundException() { }
 		public EntityNotFoundException(string message) : base(message) { }

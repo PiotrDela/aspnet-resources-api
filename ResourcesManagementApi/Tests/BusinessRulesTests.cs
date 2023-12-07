@@ -16,6 +16,21 @@ namespace ResourcesManagementApi.Tests
         }
 
         [Fact]
+        public void ShouldBePossibleToLockResourceIfExistingLockExpired()
+        {
+            var expiredlockOwner = new User() { Id = 1, Name = "John" };
+
+            var resource = new Resource();
+            resource.LockedById = expiredlockOwner.Id;
+            resource.LockExpirationTimeUtc = DateTime.UtcNow.AddHours(-1);
+
+            var newLockOwner = new User();
+            resource.LockBy(newLockOwner, TimeSpan.FromSeconds(2));
+
+            Assert.Equal(newLockOwner.Id, resource.LockedById);
+        }
+
+        [Fact]
         public void ShouldNotAllowToLockResourceAlreadyLockedByDifferentUser()
         {
             var lockOwner = new User() { Id = 1, Name = "John" };
