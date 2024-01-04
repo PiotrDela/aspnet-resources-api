@@ -32,7 +32,7 @@ namespace ResourcesManagementApi.Application.Commands
                 throw new Domain.Exceptions.EntityNotFoundException($"Could not find resource with id: {request.ResourceId}");
             }
 
-            resource.LockBy(getRequestingUserTask.Result, request.LockDuration);
+            resource.Lock(getRequestingUserTask.Result, request.LockDuration);
             await this.resourceRepository.UpdateAsync(resource);
         }
     }

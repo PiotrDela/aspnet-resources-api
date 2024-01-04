@@ -5,7 +5,6 @@ using System.Data;
 
 namespace ResourcesManagementApi.Infrastructure
 {
-
     public class ResourceRepository : IResourceRepository
     {
         private readonly DapperContext dapperContext;
@@ -49,8 +48,8 @@ namespace ResourcesManagementApi.Infrastructure
             var parameters = new DynamicParameters();
             parameters.Add("Id", resource.Id, DbType.Int32);
             parameters.Add("Status", resource.Status, DbType.Int32);
-            parameters.Add("LockExpirationTime", resource.LockExpirationTimeUtc, DbType.DateTime);
-            parameters.Add("LockedById", resource.LockedById, DbType.Int32);
+            parameters.Add("LockExpirationTime", resource.CurrentLock?.ExpirationTimeUtc, DbType.DateTime);
+            parameters.Add("LockedById", resource.CurrentLock?.Owner.Id, DbType.Int32);
             parameters.Add("Version", resource.Version);
 
             using (var connection = dapperContext.CreateConnection())

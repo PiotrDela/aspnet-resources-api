@@ -12,7 +12,7 @@ namespace ResourcesManagementApi.Tests
             var resource = new Resource();
             resource.Withdrawn();
 
-            Assert.Throws<BusinessRuleValidationException>(() => resource.LockBy(new User(), TimeSpan.FromDays(1)));
+            Assert.Throws<BusinessRuleValidationException>(() => resource.Lock(new User(), TimeSpan.FromDays(1)));
         }
 
         [Fact]
@@ -21,13 +21,12 @@ namespace ResourcesManagementApi.Tests
             var expiredlockOwner = new User() { Id = 1, Name = "John" };
 
             var resource = new Resource();
-            resource.LockedById = expiredlockOwner.Id;
-            resource.LockExpirationTimeUtc = DateTime.UtcNow.AddHours(-1);
+            resource.Lock(expiredlockOwner, TimeSpan.FromHours(-1));
 
             var newLockOwner = new User();
-            resource.LockBy(newLockOwner, TimeSpan.FromSeconds(2));
+            resource.Lock(newLockOwner, TimeSpan.FromDays(2));
 
-            Assert.Equal(newLockOwner.Id, resource.LockedById);
+            Assert.True(resource.CurrentLock.OwnedBy(newLockOwner));
         }
 
         [Fact]
@@ -35,9 +34,10 @@ namespace ResourcesManagementApi.Tests
         {
             var lockOwner = new User() { Id = 1, Name = "John" };
 
-            var resource = new Resource() { Status = ResourceAvaiabilityStatus.Available, LockedById = lockOwner.Id, LockExpirationTimeUtc = DateTime.UtcNow.AddDays(1)  };
+            var resource = new Resource();
+            resource.Lock(lockOwner, TimeSpan.FromDays(1));
 
-            Assert.Throws<BusinessRuleValidationException>(() => resource.LockBy(new User(), TimeSpan.FromDays(1)));
+            Assert.Throws<BusinessRuleValidationException>(() => resource.Lock(new User(), TimeSpan.FromDays(1)));
         }
 
         [Fact]
@@ -45,21 +45,10 @@ namespace ResourcesManagementApi.Tests
         {
             var lockOwner = new User() { Id = 1, Name = "John" };
 
-            var resource = new Resource() { Status = ResourceAvaiabilityStatus.Available, LockedById = lockOwner.Id, LockExpirationTimeUtc = DateTime.UtcNow.AddDays(1) };
-
-            Assert.Throws<BusinessRuleValidationException>(() => resource.LockBy(new User(), TimeSpan.FromDays(1)));
-        }
-
-        [Fact]
-        public void LockShouldAssignLockedById()
-        {
             var resource = new Resource();
-            var user = new User();
+            resource.Lock(lockOwner, TimeSpan.FromDays(5));
 
-            resource.LockBy(user, TimeSpan.FromDays(1));
-
-            Assert.Equal(resource.LockedById, user.Id);
-            // TODO: check for lock expiration time, need to dealt with DateTime.UtcNow() by abtracting a datetime provider
+            Assert.Throws<BusinessRuleValidationException>(() => resource.Unlock(new User()));
         }
 
         [Fact]
@@ -68,12 +57,11 @@ namespace ResourcesManagementApi.Tests
             var resource = new Resource();
             var user = new User();
 
-            resource.LockBy(user, TimeSpan.FromDays(1));
+            resource.Lock(user, TimeSpan.FromDays(1));
 
             resource.Unlock(user);
 
-            Assert.Null(resource.LockedById);
-            Assert.Null(resource.LockExpirationTimeUtc);
+            Assert.Null(resource.CurrentLock);
         }
     }
 }

@@ -2,25 +2,40 @@
 {
     public class Resource: EntityBase
     {
-        public ResourceAvaiabilityStatus Status { get; set; }
-        public DateTime? LockExpirationTimeUtc { get; set; }
-        public int? LockedById { get; set; }
+        public ResourceAvaiabilityStatus Status { get; private set; }
 
-        public void LockBy(User user, TimeSpan lockPeriod)
+        public ResourceLock CurrentLock { get; private set; }
+
+        public void Lock(User user, TimeSpan lockPeriod)
+        {
+            this.EnsureAvailability();
+            this.EnsureNotLockedByDifferentUser(user);
+
+            this.CurrentLock = ResourceLock.CreateTemporaryLock(user, lockPeriod);
+        }
+
+        public void LockPermanently(User user)
+        {
+            this.EnsureAvailability();
+            this.EnsureNotLockedByDifferentUser(user);
+
+            this.CurrentLock = ResourceLock.CreatePermanentLock(user);
+        }
+
+        private void EnsureAvailability()
         {
             if (this.Status == ResourceAvaiabilityStatus.Withdrawn)
             {
                 throw new Exceptions.BusinessRuleValidationException("Unlock not allowed. Resource has been withdrawn already");
             }
+        }
 
-            var utcNow = DateTime.UtcNow;
-            if (LockedById.HasValue && LockedById.Value != user.Id && utcNow < this.LockExpirationTimeUtc)
+        private void EnsureNotLockedByDifferentUser(User user)
+        {
+            if (CurrentLock != null && CurrentLock.IsActive && CurrentLock.OwnedBy(user) == false)
             {
                 throw new Exceptions.BusinessRuleValidationException("Unlock not permitted");
             }
-
-            this.LockedById = user.Id;
-            this.LockExpirationTimeUtc = lockPeriod == TimeSpan.MaxValue ? DateTime.MaxValue : DateTime.UtcNow.Add(lockPeriod);
         }
 
         public void Withdrawn()
@@ -30,19 +45,9 @@
 
         public void Unlock(User user)
         {
-            if (LockedById.HasValue && LockedById.Value != user.Id)
-            {
-                throw new Exceptions.BusinessRuleValidationException("Unlock not permitted");
-            }
+            this.EnsureNotLockedByDifferentUser(user);
 
-            this.LockExpirationTimeUtc = null;
-            this.LockedById = null;
+            this.CurrentLock = null;
         }
-    }
-
-    public enum ResourceAvaiabilityStatus
-    {
-        Available = 0,
-        Withdrawn = 1,
     }
 }
