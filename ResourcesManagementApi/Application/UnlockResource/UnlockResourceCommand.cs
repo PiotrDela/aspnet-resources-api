@@ -1,9 +1,9 @@
 ﻿using MediatR;
 
-namespace ResourcesManagementApi.Application.Commands
+namespace ResourcesManagementApi.Application.UnlockResource
 {
-    public class UnlockResourceCommand: IRequest
-    { 
+    public class UnlockResourceCommand : IRequest
+    {
         public int ResourceId { get; set; }
         public int RequestingUserId { get; set; }
 

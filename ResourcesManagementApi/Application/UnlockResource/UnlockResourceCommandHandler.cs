@@ -1,23 +1,23 @@
 ﻿using MediatR;
 using ResourcesManagementApi.Domain.Repositories;
 
-namespace ResourcesManagementApi.Application.Commands
+namespace ResourcesManagementApi.Application.UnlockResource
 {
-    public class LockResourceCommandHandler : IRequestHandler<LockResourceCommand>
+    public class UnlockResourceCommandHandler : IRequestHandler<UnlockResourceCommand>
     {
         private readonly IResourceRepository resourceRepository;
         private readonly IUserRepository userRepository;
 
-        public LockResourceCommandHandler(IResourceRepository resourceRepository, IUserRepository userRepository)
+        public UnlockResourceCommandHandler(IResourceRepository resourceRepository, IUserRepository userRepository)
         {
             this.resourceRepository = resourceRepository ?? throw new ArgumentNullException(nameof(resourceRepository));
             this.userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         }
 
-        public async Task Handle(LockResourceCommand request, CancellationToken cancellationToken)
+        public async Task Handle(UnlockResourceCommand request, CancellationToken cancellationToken)
         {
-            var getRequestingUserTask = this.userRepository.GetAsync(request.RequestingUserId);
-            var getResourceTask = this.resourceRepository.GetAsync(request.ResourceId);
+            var getRequestingUserTask = userRepository.GetAsync(request.RequestingUserId);
+            var getResourceTask = resourceRepository.GetAsync(request.ResourceId);
 
             await Task.WhenAll(getRequestingUserTask, getResourceTask);
 
@@ -32,8 +32,8 @@ namespace ResourcesManagementApi.Application.Commands
                 throw new Domain.Exceptions.EntityNotFoundException($"Could not find resource with id: {request.ResourceId}");
             }
 
-            resource.Lock(getRequestingUserTask.Result, request.LockDuration);
-            await this.resourceRepository.UpdateAsync(resource);
+            resource.Unlock(getRequestingUserTask.Result);
+            await resourceRepository.UpdateAsync(resource);
         }
     }
 }

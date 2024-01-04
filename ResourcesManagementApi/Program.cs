@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using ResourcesManagementApi;
+using ResourcesManagementApi.Application.LockResource;
 using ResourcesManagementApi.Authentication;
 using ResourcesManagementApi.Domain.Repositories;
 using ResourcesManagementApi.Infrastructure;
@@ -21,6 +22,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<DapperContext>();
 builder.Services.AddScoped<IResourceRepository, ResourceRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ILockConfiguration, LockConfiguration>();
 builder.Services.AddScoped<IAuthenticationProvider, AuthenticationProvider>();
 
 // Configure Authentication

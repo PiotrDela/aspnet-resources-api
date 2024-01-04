@@ -2,7 +2,10 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ResourcesManagementApi.ApiModel;
-using ResourcesManagementApi.Application.Commands;
+using ResourcesManagementApi.Application.CreateResource;
+using ResourcesManagementApi.Application.LockResource;
+using ResourcesManagementApi.Application.UnlockResource;
+using ResourcesManagementApi.Application.WithdrawnResource;
 
 namespace ResourcesManagementApi.Controllers;
 
@@ -65,11 +68,7 @@ public class ResourcesController : ControllerBase
             return Forbid();
         }
 
-        var temporaryLockPeriodInHours = configuration.GetValue<int>("TemporaryLockPeriodInHours");
-
-        var lockPeriod = request.LockKind == ResourceLockKind.Temporary ? TimeSpan.FromHours(temporaryLockPeriodInHours) : TimeSpan.MaxValue;
-
-        await this.sender.Send(new LockResourceCommand(id, requestingUserId.Value, lockPeriod));
+        await this.sender.Send(new LockResourceCommand(id, requestingUserId.Value, request.LockKind == ResourceLockKind.Permanent));
 
         return Ok();
     }

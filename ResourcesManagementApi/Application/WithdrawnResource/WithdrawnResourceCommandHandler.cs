@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using ResourcesManagementApi.Domain.Repositories;
 
-namespace ResourcesManagementApi.Application.Commands
+namespace ResourcesManagementApi.Application.WithdrawnResource
 {
     public class WithdrawnResourceCommandHandler : IRequestHandler<WithdrawnResourceCommand>
     {
@@ -14,14 +14,14 @@ namespace ResourcesManagementApi.Application.Commands
 
         public async Task Handle(WithdrawnResourceCommand request, CancellationToken cancellationToken)
         {
-            var resource = await this.resourceRepository.GetAsync(request.ResourceId);
+            var resource = await resourceRepository.GetAsync(request.ResourceId);
             if (resource == null)
             {
                 throw new Domain.Exceptions.EntityNotFoundException($"Could not find resource with id: {request.ResourceId}");
             }
 
             resource.Withdrawn();
-            await this.resourceRepository.UpdateAsync(resource); // TODO: passing cancellation token would nice as well
+            await resourceRepository.UpdateAsync(resource); // TODO: passing cancellation token would nice as well
         }
     }
 }

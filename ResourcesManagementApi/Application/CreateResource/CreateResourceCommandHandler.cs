@@ -1,8 +1,7 @@
 ﻿using MediatR;
-using ResourcesManagementApi.Application.Commands;
 using ResourcesManagementApi.Domain.Repositories;
 
-namespace ResourcesManagementApi.Application.CommandHandlers
+namespace ResourcesManagementApi.Application.CreateResource
 {
     public class CreateResourceCommandHandler : IRequestHandler<CreateResourceCommand, int>
     {
